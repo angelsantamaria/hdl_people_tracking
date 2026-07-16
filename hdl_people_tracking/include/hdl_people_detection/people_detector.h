@@ -33,18 +33,8 @@ private:
   Eigen::Array3f max_size;
   float euclidean_cluster_tolerance;
   float dpmeans_split_threshold;
-  bool enable_shape_filter;
-  float shape_min_width;
-  float shape_max_width;
-  float shape_min_depth;
-  float shape_min_radius;
-  float shape_max_radius;
-  float shape_max_fit_rmse;
-  float shape_max_linearity_ratio;
 
   std::unique_ptr<KidonoHumanClassifier> classifier;
-
-  bool passesShapeFilter(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr& cloud) const;
 };
 
 }

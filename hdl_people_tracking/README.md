@@ -48,6 +48,3 @@ angular jump from the predicted track is small.
 Useful detector parameters include `euclidean_cluster_tolerance` default `0.2`
 and `dpmeans_split_threshold` default `0.45`. The height slice is controlled by
 `min_detection_height` default `0.5` and `max_detection_height` default `1.8`.
-The launch enables `enable_shape_filter`, which rejects clusters whose XY
-footprint is too flat, too linear, or incompatible with a person-sized cylinder
-front arc.

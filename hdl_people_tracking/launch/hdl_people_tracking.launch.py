@@ -33,14 +33,6 @@ def generate_launch_description():
                     'cluster_max_size_z': 2.0,
                     'euclidean_cluster_tolerance': 0.2,
                     'dpmeans_split_threshold': 0.45,
-                    'enable_shape_filter': False,
-                    'shape_min_width': 0.18,
-                    'shape_max_width': 0.90,
-                    'shape_min_depth': 0.02,
-                    'shape_min_radius': 0.10,
-                    'shape_max_radius': 0.45,
-                    'shape_max_fit_rmse': 0.08,
-                    'shape_max_linearity_ratio': 80.0,
                     'enable_classification': False
                 }],
                 remappings=[
@@ -56,7 +48,7 @@ def generate_launch_description():
                     'human_radius': 0.4,
                     'track_single_target_mode': True,
                     'track_init_centerline_only': True,
-                    'track_init_centerline_angle_deg': 10.0,
+                    'track_init_centerline_angle_deg': 5.0,
                     'track_init_min_range': 2.0,
                     'track_init_max_range': 4.0,
                     'track_init_preferred_range': 3.0,

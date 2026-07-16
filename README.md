@@ -47,8 +47,8 @@ The launch file remaps the detector input `points` topic to `/rslidar_points`.
 - `hdl_people_tracking/markers` (`visualization_msgs/msg/MarkerArray`): tracked-people markers
 - `hdl_people_tracking/detection_markers` (`visualization_msgs/msg/MarkerArray`): detection markers
 - `hdl_people_tracking/cropped_points` (`sensor_msgs/msg/PointCloud2`): cropped/downsampled candidate points
-- `hdl_people_tracking/cluster_points` (`sensor_msgs/msg/PointCloud2`): clustered points accepted as human/person
-- `hdl_people_tracking/human_points` (`sensor_msgs/msg/PointCloud2`): same person-accepted points, kept as a compatibility/debug topic
+- `hdl_people_tracking/cluster_points` (`sensor_msgs/msg/PointCloud2`): all clustered points
+- `hdl_people_tracking/human_points` (`sensor_msgs/msg/PointCloud2`): clustered points accepted as human
 
 ## Key Parameters
 
@@ -58,13 +58,6 @@ The launch file remaps the detector input `points` topic to `/rslidar_points`.
 - `front_fov_deg` default `90.0`
 - `downsample_resolution` default `0.1`
 - `enable_classification` default `false`
-- `enable_shape_filter` launch default `true`
-- `shape_min_width` default `0.18`
-- `shape_max_width` default `0.90`
-- `shape_min_radius` default `0.10`
-- `shape_max_radius` default `0.45`
-- `shape_max_fit_rmse` default `0.08`
-- `shape_max_linearity_ratio` default `80.0`
 - `euclidean_cluster_tolerance` default `0.2`
 - `dpmeans_split_threshold` default `0.45`
 - `cluster_min_pts` default `10`
