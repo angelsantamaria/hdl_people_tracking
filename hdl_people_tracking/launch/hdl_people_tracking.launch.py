@@ -15,11 +15,11 @@ def generate_launch_description():
                 name='hdl_people_detection_node',
                 parameters=[{
                     'downsample_resolution': 0.02,
-                    'min_detection_range': 0.1,
+                    'min_detection_range': 1.0,
                     'max_detection_range': 5.0,
                     'min_detection_height': -0.3,
                     'max_detection_height': 1.0,
-                    'front_fov_deg': 90.0,
+                    'front_fov_deg': 70.0,
                     'forward_axis': 'x',
                     'lateral_axis': 'y',
                     'height_axis': 'z',
