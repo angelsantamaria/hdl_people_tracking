@@ -101,11 +101,17 @@ private:
   }
 
   std::vector<float> covariance3d(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr& cloud, Eigen::Vector3f& mean, Eigen::Matrix3f& covariance) const {
-    Eigen::Vector4f centroid;
+    if (!cloud || cloud->empty()) {
+      mean.setZero();
+      covariance.setZero();
+      return std::vector<float>(6, 0.0f);
+    }
+
+    Eigen::Vector4f centroid = Eigen::Vector4f::Zero();
     pcl::compute3DCentroid(*cloud, centroid);
     pcl::computeCovarianceMatrix(*cloud, centroid, covariance);
 
-    mean = centroid.topLeftCorner(3, 1);
+    mean = Eigen::Vector3f(centroid.x(), centroid.y(), centroid.z());
 
     std::vector<float> feature(6);
     feature[0] = covariance(0, 0);		feature[1] = covariance(0, 1);		feature[2] = covariance(0, 2);

@@ -1,7 +1,10 @@
 #ifndef MARCEL_PEOPLE_DETECTOR_HPP
 #define MARCEL_PEOPLE_DETECTOR_HPP
 
+#include <algorithm>
 #include <chrono>
+#include <numeric>
+#include <vector>
 #include <pcl/filters/extract_indices.h>
 #include <pcl/segmentation/extract_clusters.h>
 
@@ -127,7 +130,11 @@ private:
     kkl::alg::DPmeans<float, 2> dp_means;
 
     std::vector<Eigen::Vector2f> points(cloud->size());
-    std::transform(cloud->begin(), cloud->end(), points.begin(), [=](const pcl::PointXYZI& pt) { return pt.getVector3fMap().head<2>(); });
+    std::transform(
+      cloud->begin(),
+      cloud->end(),
+      points.begin(),
+      [](const pcl::PointXYZI& pt) { return Eigen::Vector2f(pt.x, pt.y); });
     if (!dp_means.train(points, lambda, 0.01f, 128)) {
       // std::cerr << "warning : dp_means not converged!!" << std::endl;
     }
@@ -152,11 +159,12 @@ private:
     std::vector<Eigen::Vector2f> means(clouds.size());
     std::transform(clouds.begin(), clouds.end(), means.begin(),
       [=](const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud) {
-        Eigen::Vector4f mean = Eigen::Vector4f::Zero();
+        Eigen::Vector2f mean = Eigen::Vector2f::Zero();
         for(const auto& pt : cloud->points) {
-          mean += pt.getVector4fMap();
+          mean += Eigen::Vector2f(pt.x, pt.y);
         }
-        return mean.head<2>();
+        mean /= static_cast<float>(std::max<size_t>(1, cloud->size()));
+        return mean;
       }
     );
 
@@ -209,8 +217,8 @@ private:
     Eigen::Vector2f major = (mean2 - mean1).normalized();
 
     std::vector<float> on_major(cloud1->size() + cloud2->size());
-    std::transform(cloud1->begin(), cloud1->end(), on_major.begin(), [=](const pcl::PointXYZI& pt) { return major.dot(pt.getVector3fMap().head<2>()); });
-    std::transform(cloud2->begin(), cloud2->end(), on_major.begin() + cloud1->size(), [=](const pcl::PointXYZI& pt) { return major.dot(pt.getVector3fMap().head<2>()); });
+    std::transform(cloud1->begin(), cloud1->end(), on_major.begin(), [=](const pcl::PointXYZI& pt) { return major.dot(Eigen::Vector2f(pt.x, pt.y)); });
+    std::transform(cloud2->begin(), cloud2->end(), on_major.begin() + cloud1->size(), [=](const pcl::PointXYZI& pt) { return major.dot(Eigen::Vector2f(pt.x, pt.y)); });
 
     float min_val = major.dot(mean1);
     float max_val = major.dot(mean2);

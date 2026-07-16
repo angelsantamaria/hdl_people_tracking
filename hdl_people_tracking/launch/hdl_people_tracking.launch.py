@@ -33,7 +33,7 @@ def generate_launch_description():
                     'enable_classification': False
                 }],
                 remappings=[
-                    ('points', '/b2/rslidar_points')
+                    ('points', '/rslidar_points')
                 ]
             ),
             ComposableNode(
