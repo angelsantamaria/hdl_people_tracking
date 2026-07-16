@@ -13,7 +13,7 @@ This package contains the runtime nodes. Message definitions live in
 ## Detection Pipeline
 
 1. Subscribe to `points`.
-2. Crop to a configurable forward sector, default 90 degrees and 5 m maximum range.
+2. Crop to a configurable forward sector, default 90 degrees, 5 m maximum range, and 0.5-1.8 m height.
 3. Downsample with a voxel grid.
 4. Cluster foreground candidates with Euclidean clustering and the Haselich/Marcel-style DP-means splitter.
 5. Optionally run the Kidono classifier.
@@ -28,7 +28,10 @@ and can reject valid people when used with a different sensor/intensity profile.
 ros2 launch hdl_people_tracking hdl_people_tracking.launch.py
 ```
 
-The included launch remaps `points` to `/b2/rslidar_points`.
+The included launch remaps `points` to `/rslidar_points`.
+Published detector and tracker topics are relative and use the
+`hdl_people_tracking/` prefix.
 
 Useful detector parameters include `euclidean_cluster_tolerance` default `0.2`
-and `dpmeans_split_threshold` default `0.45`.
+and `dpmeans_split_threshold` default `0.45`. The height slice is controlled by
+`min_detection_height` default `0.5` and `max_detection_height` default `1.8`.

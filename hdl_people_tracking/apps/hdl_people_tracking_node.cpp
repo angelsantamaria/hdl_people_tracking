@@ -23,10 +23,10 @@ public:
     tracker_ = std::make_unique<PeopleTracker>(this);
     color_palette_ = cvk::create_color_palette(16);
 
-    tracks_pub_ = this->create_publisher<hdl_people_tracking_msgs::msg::TrackArray>("tracks", 10);
-    marker_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("markers", 10);
+    tracks_pub_ = this->create_publisher<hdl_people_tracking_msgs::msg::TrackArray>("hdl_people_tracking/tracks", 10);
+    marker_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("hdl_people_tracking/markers", 10);
     clusters_sub_ = this->create_subscription<hdl_people_tracking_msgs::msg::ClusterArray>(
-      "clusters", 1, std::bind(&HdlPeopleTrackingNode::callback, this, std::placeholders::_1));
+      "hdl_people_tracking/clusters", 1, std::bind(&HdlPeopleTrackingNode::callback, this, std::placeholders::_1));
   }
 
 private:

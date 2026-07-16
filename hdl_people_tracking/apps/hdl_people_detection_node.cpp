@@ -30,11 +30,11 @@ public:
   {
     initialize_params();
 
-    cropped_points_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("cropped_points", 5);
-    cluster_points_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("cluster_points", 5);
-    human_points_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("human_points", 5);
-    detection_markers_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("detection_markers", 5);
-    clusters_pub_ = this->create_publisher<hdl_people_tracking_msgs::msg::ClusterArray>("clusters", 10);
+    cropped_points_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("hdl_people_tracking/cropped_points", 5);
+    cluster_points_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("hdl_people_tracking/cluster_points", 5);
+    human_points_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("hdl_people_tracking/human_points", 5);
+    detection_markers_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("hdl_people_tracking/detection_markers", 5);
+    clusters_pub_ = this->create_publisher<hdl_people_tracking_msgs::msg::ClusterArray>("hdl_people_tracking/clusters", 10);
 
     points_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
       "points",
@@ -54,17 +54,30 @@ private:
     downsample_resolution_ = this->declare_parameter<double>("downsample_resolution", 0.1);
     min_detection_range_ = this->declare_parameter<double>("min_detection_range", 0.1);
     max_detection_range_ = this->declare_parameter<double>("max_detection_range", 5.0);
+    min_detection_height_ = this->declare_parameter<double>("min_detection_height", 0.5);
+    max_detection_height_ = this->declare_parameter<double>("max_detection_height", 1.8);
     front_fov_deg_ = this->declare_parameter<double>("front_fov_deg", 90.0);
 
     const std::string forward_axis = this->declare_parameter<std::string>("forward_axis", "x");
     const std::string lateral_axis = this->declare_parameter<std::string>("lateral_axis", "y");
+    const std::string height_axis = this->declare_parameter<std::string>("height_axis", "z");
     forward_axis_ = parse_axis(forward_axis, Axis{0, 1.0}, "forward_axis");
     lateral_axis_ = parse_axis(lateral_axis, Axis{1, 1.0}, "lateral_axis");
+    height_axis_ = parse_axis(height_axis, Axis{2, 1.0}, "height_axis");
     if (forward_axis_.index == lateral_axis_.index) {
       RCLCPP_WARN(
         this->get_logger(),
         "forward_axis and lateral_axis refer to the same coordinate; using lateral_axis='y'");
       lateral_axis_ = Axis{1, 1.0};
+    }
+    if (height_axis_.index == forward_axis_.index || height_axis_.index == lateral_axis_.index) {
+      RCLCPP_WARN(this->get_logger(), "height_axis overlaps with a crop axis; using the remaining coordinate");
+      for (int index = 0; index < 3; index++) {
+        if (index != forward_axis_.index && index != lateral_axis_.index) {
+          height_axis_ = Axis{index, 1.0};
+          break;
+        }
+      }
     }
 
     if (downsample_resolution_ < 0.0) {
@@ -78,15 +91,23 @@ private:
         "max_detection_range must be larger than min_detection_range; using 5.0 m");
       max_detection_range_ = 5.0;
     }
+    if (max_detection_height_ <= min_detection_height_) {
+      RCLCPP_WARN(
+        this->get_logger(),
+        "max_detection_height must be larger than min_detection_height; using 0.5-1.8 m");
+      min_detection_height_ = 0.5;
+      max_detection_height_ = 1.8;
+    }
 
     front_fov_deg_ = std::max(1.0, std::min(front_fov_deg_, 179.0));
     half_fov_tangent_ = std::tan((front_fov_deg_ * kPi / 180.0) * 0.5);
 
     RCLCPP_INFO(
       this->get_logger(),
-      "People detector crop: %.1f deg FOV, %.2f-%.2f m range, forward=%s, lateral=%s",
+      "People detector crop: %.1f deg FOV, %.2f-%.2f m range, %.2f-%.2f m height, forward=%s, lateral=%s, height=%s",
       front_fov_deg_, min_detection_range_, max_detection_range_,
-      forward_axis.c_str(), lateral_axis.c_str());
+      min_detection_height_, max_detection_height_,
+      forward_axis.c_str(), lateral_axis.c_str(), height_axis.c_str());
 
     detector_ = std::make_unique<hdl_people_detection::PeopleDetector>(this);
   }
@@ -170,7 +191,11 @@ private:
 
       const double forward = coordinate(point, forward_axis_);
       const double lateral = coordinate(point, lateral_axis_);
+      const double height = coordinate(point, height_axis_);
       if (forward <= 0.0) {
+        continue;
+      }
+      if (height < min_detection_height_ || height > max_detection_height_) {
         continue;
       }
 
@@ -329,10 +354,13 @@ private:
   double downsample_resolution_;
   double min_detection_range_;
   double max_detection_range_;
+  double min_detection_height_;
+  double max_detection_height_;
   double front_fov_deg_;
   double half_fov_tangent_;
   Axis forward_axis_;
   Axis lateral_axis_;
+  Axis height_axis_;
 
   std::unique_ptr<hdl_people_detection::PeopleDetector> detector_;
 };
