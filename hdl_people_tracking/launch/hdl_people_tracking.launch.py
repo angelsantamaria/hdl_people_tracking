@@ -28,6 +28,8 @@ def generate_launch_description():
                     'cluster_max_size_x': 1.0,
                     'cluster_max_size_y': 1.0,
                     'cluster_max_size_z': 2.0,
+                    'euclidean_cluster_tolerance': 0.2,
+                    'dpmeans_split_threshold': 0.45,
                     'enable_classification': False
                 }],
                 remappings=[

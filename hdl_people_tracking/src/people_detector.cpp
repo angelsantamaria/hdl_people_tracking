@@ -15,6 +15,17 @@ PeopleDetector::PeopleDetector(rclcpp::Node* node) {
   max_size.x() = node->declare_parameter<double>("cluster_max_size_x", 1.0);
   max_size.y() = node->declare_parameter<double>("cluster_max_size_y", 1.0);
   max_size.z() = node->declare_parameter<double>("cluster_max_size_z", 2.0);
+  euclidean_cluster_tolerance = static_cast<float>(node->declare_parameter<double>("euclidean_cluster_tolerance", 0.2));
+  dpmeans_split_threshold = static_cast<float>(node->declare_parameter<double>("dpmeans_split_threshold", 0.45));
+
+  if(euclidean_cluster_tolerance <= 0.0f) {
+    RCLCPP_WARN(node->get_logger(), "euclidean_cluster_tolerance must be positive; using 0.2 m");
+    euclidean_cluster_tolerance = 0.2f;
+  }
+  if(dpmeans_split_threshold <= 0.0f) {
+    RCLCPP_WARN(node->get_logger(), "dpmeans_split_threshold must be positive; using 0.45 m");
+    dpmeans_split_threshold = 0.45f;
+  }
 
   if(node->declare_parameter<bool>("enable_classification", false)) {
     try {
@@ -35,7 +46,13 @@ std::vector<Cluster::Ptr> PeopleDetector::detect(const pcl::PointCloud<pcl::Poin
     return {};
   }
 
-  MarcelPeopleDetector marcel(min_pts, max_pts, min_size, max_size);
+  MarcelPeopleDetector marcel(
+    min_pts,
+    max_pts,
+    min_size,
+    max_size,
+    euclidean_cluster_tolerance,
+    dpmeans_split_threshold);
   auto clusters = marcel.detect(cloud);
 
   for(auto& cluster : clusters) {

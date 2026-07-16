@@ -26,11 +26,19 @@ public:
    * @param min_size   minimum size of a cluster
    * @param max_size   maximum size of a cluster
    */
-  MarcelPeopleDetector(int min_pt, int max_pt, const Eigen::Array3f& min_size, const Eigen::Array3f& max_size)
+  MarcelPeopleDetector(
+    int min_pt,
+    int max_pt,
+    const Eigen::Array3f& min_size,
+    const Eigen::Array3f& max_size,
+    float cluster_tolerance,
+    float split_threshold)
     : min_pt(min_pt),
       max_pt(max_pt),
       min_size(min_size),
-      max_size(max_size)
+      max_size(max_size),
+      cluster_tolerance(cluster_tolerance),
+      split_threshold(split_threshold)
   {
   }
 
@@ -40,8 +48,6 @@ public:
    * @return detected clusters
    */
   std::vector<Cluster::Ptr> detect(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr& cloud) {
-    const float lambda = 0.45;
-
     // project #cloud into XY-space
     pcl::PointCloud<pcl::PointXYZI>::Ptr scaled(new pcl::PointCloud<pcl::PointXYZI>());
     scaled->resize(cloud->size());
@@ -73,7 +79,7 @@ public:
         continue;
       }
 
-      auto splitted = split(cluster_cloud, lambda);
+      auto splitted = split(cluster_cloud, split_threshold);
       auto merged = merge(splitted);
 
       std::copy_if(merged.begin(), merged.end(), std::back_inserter(object_clouds), [&](const pcl::PointCloud<pcl::PointXYZI>::Ptr& c) { return isValid(c); });
@@ -104,7 +110,7 @@ private:
     kdtree->setInputCloud(cloud);
 
     pcl::EuclideanClusterExtraction<pcl::PointXYZI> extractor;
-    extractor.setClusterTolerance(0.2);
+    extractor.setClusterTolerance(cluster_tolerance);
     extractor.setMinClusterSize(16);
     extractor.setMaxClusterSize(8192 * 16);
     extractor.setInputCloud(cloud);
@@ -231,6 +237,8 @@ private:
   int max_pt;
   Eigen::Array3f min_size;
   Eigen::Array3f max_size;
+  float cluster_tolerance;
+  float split_threshold;
 };
 
 }

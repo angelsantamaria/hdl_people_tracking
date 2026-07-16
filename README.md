@@ -46,5 +46,7 @@ The launch file remaps the detector input `points` topic to `/b2/rslidar_points`
 - `front_fov_deg` default `90.0`
 - `downsample_resolution` default `0.1`
 - `enable_classification` default `false`
+- `euclidean_cluster_tolerance` default `0.2`
+- `dpmeans_split_threshold` default `0.45`
 - `cluster_min_pts` default `10`
 - `cluster_max_pts` default `2048`

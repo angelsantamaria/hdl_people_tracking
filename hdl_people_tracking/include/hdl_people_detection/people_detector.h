@@ -31,6 +31,8 @@ private:
   int max_pts;
   Eigen::Array3f min_size;
   Eigen::Array3f max_size;
+  float euclidean_cluster_tolerance;
+  float dpmeans_split_threshold;
 
   std::unique_ptr<KidonoHumanClassifier> classifier;
 };
