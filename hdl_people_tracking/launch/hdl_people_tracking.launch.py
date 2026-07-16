@@ -41,7 +41,7 @@ def generate_launch_description():
                     'shape_max_radius': 0.45,
                     'shape_max_fit_rmse': 0.08,
                     'shape_max_linearity_ratio': 80.0,
-                    'enable_classification': True
+                    'enable_classification': False
                 }],
                 remappings=[
                     ('points', '/rslidar_points')
