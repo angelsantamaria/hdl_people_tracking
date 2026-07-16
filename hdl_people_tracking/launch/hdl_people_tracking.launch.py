@@ -37,8 +37,8 @@ def generate_launch_description():
                     'shape_min_width': 0.18,
                     'shape_max_width': 0.90,
                     'shape_min_depth': 0.02,
-                    'shape_min_radius': 0.10,
-                    'shape_max_radius': 0.45,
+                    'shape_min_radius': 0.30,
+                    'shape_max_radius': 0.50,
                     'shape_max_fit_rmse': 0.08,
                     'shape_max_linearity_ratio': 80.0,
                     'enable_classification': False
