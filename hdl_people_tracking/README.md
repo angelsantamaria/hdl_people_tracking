@@ -33,6 +33,10 @@ The included launch remaps `points` to `/rslidar_points`.
 Published detector and tracker topics are relative and use the
 `hdl_people_tracking/` prefix.
 
+The launch enables `track_init_centerline_only`, so new tracks are born only
+from unmatched human clusters close to the 0-degree forward ray. Existing tracks
+continue to associate with detections throughout the detector FOV.
+
 Useful detector parameters include `euclidean_cluster_tolerance` default `0.2`
 and `dpmeans_split_threshold` default `0.45`. The height slice is controlled by
 `min_detection_height` default `0.5` and `max_detection_height` default `1.8`.

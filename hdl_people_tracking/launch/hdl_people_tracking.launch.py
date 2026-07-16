@@ -17,17 +17,17 @@ def generate_launch_description():
                     'downsample_resolution': 0.02,
                     'min_detection_range': 0.1,
                     'max_detection_range': 5.0,
-                    'min_detection_height': 0.0,
+                    'min_detection_height': -0.2,
                     'max_detection_height': 0.5,
                     'front_fov_deg': 90.0,
                     'forward_axis': 'x',
                     'lateral_axis': 'y',
                     'height_axis': 'z',
                     'cluster_min_pts': 10,
-                    'cluster_max_pts': 1024,
+                    'cluster_max_pts': 1500,
                     'cluster_min_size_x': 0.1,
                     'cluster_min_size_y': 0.1,
-                    'cluster_min_size_z': 0.3,
+                    'cluster_min_size_z': 0.2,
                     'cluster_max_size_x': 0.5,
                     'cluster_max_size_y': 0.5,
                     'cluster_max_size_z': 1.0,
@@ -53,7 +53,9 @@ def generate_launch_description():
                 name='hdl_people_tracking_node',
                 parameters=[{
                     'remove_trace_thresh': 1.0,
-                    'human_radius': 0.4
+                    'human_radius': 0.4,
+                    'track_init_centerline_only': True,
+                    'track_init_centerline_angle_deg': 5.0
                 }]
             )
         ],
