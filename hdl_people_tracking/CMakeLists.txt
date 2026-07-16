@@ -22,6 +22,9 @@ find_package(pcl_conversions REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(hdl_people_tracking_msgs REQUIRED)
 
@@ -36,6 +39,7 @@ include_directories(
 
 add_library(hdl_people_tracking_component SHARED
   apps/hdl_people_detection_node.cpp
+  apps/hdl_people_follow_target_node.cpp
   apps/hdl_people_tracking_node.cpp
   src/kidono_human_classifier.cpp
   src/people_detector.cpp
@@ -53,12 +57,16 @@ ament_target_dependencies(hdl_people_tracking_component
   sensor_msgs
   geometry_msgs
   std_msgs
+  tf2
+  tf2_geometry_msgs
+  tf2_ros
   visualization_msgs
   hdl_people_tracking_msgs
 )
 
 rclcpp_components_register_nodes(hdl_people_tracking_component
   "hdl_people_tracking::HdlPeopleDetectionNode"
+  "hdl_people_tracking::HdlPeopleFollowTargetNode"
   "hdl_people_tracking::HdlPeopleTrackingNode"
 )
 
@@ -90,6 +98,9 @@ ament_export_dependencies(
   sensor_msgs
   geometry_msgs
   std_msgs
+  tf2
+  tf2_geometry_msgs
+  tf2_ros
   visualization_msgs
   hdl_people_tracking_msgs
 )

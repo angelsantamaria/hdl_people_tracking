@@ -12,10 +12,9 @@ The detector crops the input cloud to the robot front sector before clustering:
 - default height axis: `+z`
 
 The tracker consumes detected human clusters and publishes constant-velocity
-Kalman tracks.
-By default, new tracks are initialized only when an unmatched human cluster is
-near the forward centerline; existing tracks can still update anywhere inside
-the detector FOV if the association is continuous.
+Kalman tracks. The launch uses single-target mode: it initializes one target
+from the forward centerline between 2 m and 4 m, prefers candidates near 3 m,
+and then suppresses all other track creation while that target exists.
 
 After clustering, the detector can reject clusters whose top-down footprint does
 not look like a person-sized cylinder front arc. This is intended to suppress
@@ -44,6 +43,7 @@ The launch file remaps the detector input `points` topic to `/rslidar_points`.
 
 - `hdl_people_tracking/clusters` (`hdl_people_tracking_msgs/msg/ClusterArray`): detected clusters
 - `hdl_people_tracking/tracks` (`hdl_people_tracking_msgs/msg/TrackArray`): tracked people
+- `hdl_people_tracking/follow_person_transform` (`geometry_msgs/msg/TransformStamped`): closest tracked person in `b2/base_link` for RoBAL follow
 - `hdl_people_tracking/markers` (`visualization_msgs/msg/MarkerArray`): tracked-people markers
 - `hdl_people_tracking/detection_markers` (`visualization_msgs/msg/MarkerArray`): detection markers
 - `hdl_people_tracking/cropped_points` (`sensor_msgs/msg/PointCloud2`): cropped/downsampled candidate points
@@ -69,7 +69,13 @@ The launch file remaps the detector input `points` topic to `/rslidar_points`.
 - `dpmeans_split_threshold` default `0.45`
 - `cluster_min_pts` default `10`
 - `cluster_max_pts` default `2048`
+- `track_single_target_mode` launch default `true`
 - `track_init_centerline_only` launch default `true`
 - `track_init_centerline_angle_deg` launch default `5.0`
+- `track_init_min_range` launch default `2.0`
+- `track_init_max_range` launch default `4.0`
+- `track_init_preferred_range` launch default `3.0`
 - `track_association_max_gap_sec` launch default `0.5`
 - `track_association_max_angle_delta_deg` launch default `15.0`
+- `base_frame` follow target selector launch default `b2/base_link`
+- `follow_transform_topic` launch default `hdl_people_tracking/follow_person_transform`

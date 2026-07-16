@@ -18,7 +18,7 @@ def generate_launch_description():
                     'min_detection_range': 0.1,
                     'max_detection_range': 5.0,
                     'min_detection_height': -0.3,
-                    'max_detection_height': 0.5,
+                    'max_detection_height': 1.0,
                     'front_fov_deg': 90.0,
                     'forward_axis': 'x',
                     'lateral_axis': 'y',
@@ -54,10 +54,26 @@ def generate_launch_description():
                 parameters=[{
                     'remove_trace_thresh': 1.0,
                     'human_radius': 0.4,
+                    'track_single_target_mode': True,
                     'track_init_centerline_only': True,
                     'track_init_centerline_angle_deg': 5.0,
+                    'track_init_min_range': 2.0,
+                    'track_init_max_range': 4.0,
+                    'track_init_preferred_range': 3.0,
                     'track_association_max_gap_sec': 0.5,
                     'track_association_max_angle_delta_deg': 15.0
+                }]
+            ),
+            ComposableNode(
+                package='hdl_people_tracking',
+                plugin='hdl_people_tracking::HdlPeopleFollowTargetNode',
+                name='hdl_people_follow_target_node',
+                parameters=[{
+                    'base_frame': 'b2/base_link',
+                    'tracks_topic': 'hdl_people_tracking/tracks',
+                    'follow_transform_topic': 'hdl_people_tracking/follow_person_transform',
+                    'track_frame_prefix': 'person_track_',
+                    'transform_timeout_sec': 0.05
                 }]
             )
         ],
