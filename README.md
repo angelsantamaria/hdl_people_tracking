@@ -14,6 +14,11 @@ The detector crops the input cloud to the robot front sector before clustering:
 The tracker consumes detected human clusters and publishes constant-velocity
 Kalman tracks.
 
+After clustering, the detector can reject clusters whose top-down footprint does
+not look like a person-sized cylinder front arc. This is intended to suppress
+wall fragments and other line-like objects while keeping the existing clustering
+logic unchanged.
+
 ## Build
 
 ```bash
@@ -50,6 +55,13 @@ The launch file remaps the detector input `points` topic to `/rslidar_points`.
 - `front_fov_deg` default `90.0`
 - `downsample_resolution` default `0.1`
 - `enable_classification` default `false`
+- `enable_shape_filter` launch default `true`
+- `shape_min_width` default `0.18`
+- `shape_max_width` default `0.90`
+- `shape_min_radius` default `0.10`
+- `shape_max_radius` default `0.45`
+- `shape_max_fit_rmse` default `0.08`
+- `shape_max_linearity_ratio` default `80.0`
 - `euclidean_cluster_tolerance` default `0.2`
 - `dpmeans_split_threshold` default `0.45`
 - `cluster_min_pts` default `10`
