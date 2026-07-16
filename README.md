@@ -47,8 +47,8 @@ The launch file remaps the detector input `points` topic to `/rslidar_points`.
 - `hdl_people_tracking/markers` (`visualization_msgs/msg/MarkerArray`): tracked-people markers
 - `hdl_people_tracking/detection_markers` (`visualization_msgs/msg/MarkerArray`): detection markers
 - `hdl_people_tracking/cropped_points` (`sensor_msgs/msg/PointCloud2`): cropped/downsampled candidate points
-- `hdl_people_tracking/cluster_points` (`sensor_msgs/msg/PointCloud2`): all clustered points
-- `hdl_people_tracking/human_points` (`sensor_msgs/msg/PointCloud2`): clustered points accepted as human
+- `hdl_people_tracking/cluster_points` (`sensor_msgs/msg/PointCloud2`): clustered points accepted as human/person
+- `hdl_people_tracking/human_points` (`sensor_msgs/msg/PointCloud2`): same person-accepted points, kept as a compatibility/debug topic
 
 ## Key Parameters
 

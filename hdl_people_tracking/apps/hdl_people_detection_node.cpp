@@ -258,8 +258,7 @@ private:
     clusters_msg.header = header;
     clusters_msg.clusters.resize(clusters.size());
 
-    Cloud::Ptr cluster_points(new Cloud());
-    Cloud::Ptr human_points(new Cloud());
+    Cloud::Ptr person_points(new Cloud());
 
     for (size_t i = 0; i < clusters.size(); i++) {
       const auto& cluster = clusters[i];
@@ -279,16 +278,15 @@ private:
       cluster_msg.centroid.y = cluster->centroid.y();
       cluster_msg.centroid.z = cluster->centroid.z();
 
-      std::copy(cluster->cloud->begin(), cluster->cloud->end(), std::back_inserter(cluster_points->points));
       if (cluster->is_human) {
-        std::copy(cluster->cloud->begin(), cluster->cloud->end(), std::back_inserter(human_points->points));
+        std::copy(cluster->cloud->begin(), cluster->cloud->end(), std::back_inserter(person_points->points));
       }
     }
 
     clusters_pub_->publish(clusters_msg);
     publish_cloud(header, filtered, cropped_points_pub_);
-    publish_cloud(header, finalize_cloud(cluster_points), cluster_points_pub_);
-    publish_cloud(header, finalize_cloud(human_points), human_points_pub_);
+    publish_cloud(header, finalize_cloud(person_points), cluster_points_pub_);
+    publish_cloud(header, finalize_cloud(person_points), human_points_pub_);
     detection_markers_pub_->publish(create_markers(header, clusters));
   }
 

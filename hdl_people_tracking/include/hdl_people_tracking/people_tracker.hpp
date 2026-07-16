@@ -121,9 +121,9 @@ public:
       people[assoc.tracker]->correct(time, observation_pos, detections[assoc.observation]);
     }
 
-    // generate new tracks
-    if(single_target_mode) {
-      if(people.empty()) {
+    // Generate new tracks only when no live ID track exists.
+    if(people.empty()) {
+      if(single_target_mode) {
         const int detection_index = selectBestInitDetection(detections, associated);
         if(detection_index >= 0) {
           const auto& observation = detections[detection_index].centroid;
@@ -131,19 +131,19 @@ public:
           KalmanTracker::Ptr tracker(new KalmanTracker(id_gen++, time, observation_pos));
           people.push_back(tracker);
         }
-      }
-    } else {
-      for(size_t i=0; i<detections.size(); i++) {
-        if(!associated[i]) {
-          const auto& observation = detections[i].centroid;
-          Eigen::Vector3d observation_pos(observation.x, observation.y, observation.z);
+      } else {
+        for(size_t i=0; i<detections.size(); i++) {
+          if(!associated[i]) {
+            const auto& observation = detections[i].centroid;
+            Eigen::Vector3d observation_pos(observation.x, observation.y, observation.z);
 
-          if(!passesTrackInitGate(observation_pos) || isCloseToExistingTrack(observation_pos)) {
-            continue;
+            if(!passesTrackInitGate(observation_pos) || isCloseToExistingTrack(observation_pos)) {
+              continue;
+            }
+
+            KalmanTracker::Ptr tracker(new KalmanTracker(id_gen++, time, observation_pos));
+            people.push_back(tracker);
           }
-
-          KalmanTracker::Ptr tracker(new KalmanTracker(id_gen++, time, observation_pos));
-          people.push_back(tracker);
         }
       }
     }
