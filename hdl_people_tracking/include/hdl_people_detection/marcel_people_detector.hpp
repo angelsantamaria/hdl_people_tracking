@@ -36,7 +36,7 @@ public:
 
   /**
    * @brief detect clusters
-   * @param cloud  background subtracted cloud
+   * @param cloud  cropped and downsampled candidate cloud
    * @return detected clusters
    */
   std::vector<Cluster::Ptr> detect(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr& cloud) {

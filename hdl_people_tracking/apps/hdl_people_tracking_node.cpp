@@ -1,0 +1,161 @@
+#include <memory>
+#include <vector>
+
+#include <boost/format.hpp>
+
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
+
+#include <hdl_people_tracking_msgs/msg/cluster_array.hpp>
+#include <hdl_people_tracking_msgs/msg/track_array.hpp>
+
+#include <hdl_people_tracking/people_tracker.hpp>
+#include <kkl/cvk/cvutils.hpp>
+
+namespace hdl_people_tracking {
+
+class HdlPeopleTrackingNode : public rclcpp::Node {
+public:
+  explicit HdlPeopleTrackingNode(const rclcpp::NodeOptions& options)
+  : Node("hdl_people_tracking_node", options)
+  {
+    tracker_ = std::make_unique<PeopleTracker>(this);
+    color_palette_ = cvk::create_color_palette(16);
+
+    tracks_pub_ = this->create_publisher<hdl_people_tracking_msgs::msg::TrackArray>("tracks", 10);
+    marker_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("markers", 10);
+    clusters_sub_ = this->create_subscription<hdl_people_tracking_msgs::msg::ClusterArray>(
+      "clusters", 1, std::bind(&HdlPeopleTrackingNode::callback, this, std::placeholders::_1));
+  }
+
+private:
+  void callback(const hdl_people_tracking_msgs::msg::ClusterArray::ConstSharedPtr clusters_msg) {
+    std::vector<hdl_people_tracking_msgs::msg::Cluster> clusters;
+    clusters.reserve(clusters_msg->clusters.size());
+    for (const auto& cluster : clusters_msg->clusters) {
+      if (cluster.is_human) {
+        clusters.push_back(cluster);
+      }
+    }
+
+    tracker_->predict(clusters_msg->header.stamp);
+    tracker_->correct(clusters_msg->header.stamp, clusters);
+
+    tracks_pub_->publish(create_tracks_msg(clusters_msg->header));
+    marker_pub_->publish(create_tracked_people_marker(clusters_msg->header));
+  }
+
+  hdl_people_tracking_msgs::msg::TrackArray create_tracks_msg(const std_msgs::msg::Header& header) const {
+    hdl_people_tracking_msgs::msg::TrackArray tracks_msg;
+    tracks_msg.header = header;
+    tracks_msg.tracks.resize(tracker_->people.size());
+
+    for (size_t i = 0; i < tracker_->people.size(); i++) {
+      const auto& track = tracker_->people[i];
+      auto& track_msg = tracks_msg.tracks[i];
+
+      track_msg.id = track->id();
+      track_msg.age = track->age(header.stamp).seconds();
+      track_msg.pos.x = track->position().x();
+      track_msg.pos.y = track->position().y();
+      track_msg.pos.z = track->position().z();
+      track_msg.vel.x = track->velocity().x();
+      track_msg.vel.y = track->velocity().y();
+      track_msg.vel.z = track->velocity().z();
+
+      const Eigen::Matrix3d pos_cov = track->positionCov();
+      const Eigen::Matrix3d vel_cov = track->velocityCov();
+      for (int row = 0; row < 3; row++) {
+        for (int col = 0; col < 3; col++) {
+          track_msg.pos_cov[row * 3 + col] = pos_cov(row, col);
+          track_msg.vel_cov[row * 3 + col] = vel_cov(row, col);
+        }
+      }
+
+      const auto* associated =
+        boost::any_cast<hdl_people_tracking_msgs::msg::Cluster>(&track->lastAssociated());
+      if (associated) {
+        track_msg.associated.resize(1);
+        track_msg.associated[0] = *associated;
+      }
+    }
+
+    return tracks_msg;
+  }
+
+  visualization_msgs::msg::MarkerArray create_tracked_people_marker(const std_msgs::msg::Header& header) const {
+    visualization_msgs::msg::MarkerArray markers;
+    if (tracker_->people.empty()) {
+      return markers;
+    }
+
+    visualization_msgs::msg::Marker boxes;
+    boxes.header = header;
+    boxes.action = visualization_msgs::msg::Marker::ADD;
+    boxes.lifetime = rclcpp::Duration::from_seconds(1.0);
+    boxes.ns = "tracked_people";
+    boxes.id = 0;
+    boxes.type = visualization_msgs::msg::Marker::CUBE_LIST;
+    boxes.pose.orientation.w = 1.0;
+    boxes.scale.x = 0.5;
+    boxes.scale.y = 0.5;
+    boxes.scale.z = 1.2;
+    boxes.colors.reserve(tracker_->people.size());
+    boxes.points.reserve(tracker_->people.size());
+
+    for (const auto& person : tracker_->people) {
+      if (person->correctionCount() < 5) {
+        continue;
+      }
+
+      const auto& color = color_palette_[person->id() % color_palette_.size()];
+      std_msgs::msg::ColorRGBA rgba;
+      rgba.r = color[2] / 255.0;
+      rgba.g = color[1] / 255.0;
+      rgba.b = color[0] / 255.0;
+      rgba.a = 0.6f;
+      boxes.colors.push_back(rgba);
+
+      geometry_msgs::msg::Point point;
+      point.x = person->position().x();
+      point.y = person->position().y();
+      point.z = person->position().z();
+      boxes.points.push_back(point);
+
+      visualization_msgs::msg::Marker text;
+      text.header = header;
+      text.action = visualization_msgs::msg::Marker::ADD;
+      text.lifetime = rclcpp::Duration::from_seconds(1.0);
+      text.ns = "tracked_people_ids";
+      text.id = static_cast<int>(person->id());
+      text.type = visualization_msgs::msg::Marker::TEXT_VIEW_FACING;
+      text.scale.z = 0.5;
+      text.pose.position = point;
+      text.pose.position.z += 0.7;
+      text.color.r = 1.0;
+      text.color.g = 1.0;
+      text.color.b = 1.0;
+      text.color.a = 1.0;
+      text.text = (boost::format("id:%d") % person->id()).str();
+      markers.markers.push_back(text);
+    }
+
+    if (!boxes.points.empty()) {
+      markers.markers.insert(markers.markers.begin(), boxes);
+    }
+
+    return markers;
+  }
+
+  rclcpp::Publisher<hdl_people_tracking_msgs::msg::TrackArray>::SharedPtr tracks_pub_;
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_;
+  rclcpp::Subscription<hdl_people_tracking_msgs::msg::ClusterArray>::SharedPtr clusters_sub_;
+
+  boost::circular_buffer<cv::Scalar> color_palette_;
+  std::unique_ptr<PeopleTracker> tracker_;
+};
+
+}  // namespace hdl_people_tracking
+
+RCLCPP_COMPONENTS_REGISTER_NODE(hdl_people_tracking::HdlPeopleTrackingNode)

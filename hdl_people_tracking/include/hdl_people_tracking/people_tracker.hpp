@@ -11,7 +11,7 @@
 #include <kkl/alg/data_association.hpp>
 #include <kkl/alg/nearest_neighbor_association.hpp>
 
-#include <hdl_people_tracking/msg/cluster.hpp>
+#include <hdl_people_tracking_msgs/msg/cluster.hpp>
 #include <hdl_people_tracking/kalman_tracker.hpp>
 
 namespace kkl {
@@ -21,7 +21,7 @@ namespace kkl {
  * @brief definition of the distance between tracker and observation for data association
  */
 template<>
-boost::optional<double> distance(const std::shared_ptr<hdl_people_tracking::KalmanTracker>& tracker, const hdl_people_tracking::msg::Cluster& observation) {
+boost::optional<double> distance(const std::shared_ptr<hdl_people_tracking::KalmanTracker>& tracker, const hdl_people_tracking_msgs::msg::Cluster& observation) {
   Eigen::Vector3d pos(observation.centroid.x, observation.centroid.y, observation.centroid.z);
   double sq_mahalanobis = tracker->squaredMahalanobisDistance(pos);
 
@@ -46,7 +46,7 @@ public:
     human_radius = node->declare_parameter<double>("human_radius", 0.4);
     remove_trace_thresh = node->declare_parameter<double>("remove_trace_thresh", 1.0);
 
-    data_association.reset(new kkl::alg::NearestNeighborAssociation<KalmanTracker::Ptr, hdl_people_tracking::msg::Cluster>());
+    data_association.reset(new kkl::alg::NearestNeighborAssociation<KalmanTracker::Ptr, hdl_people_tracking_msgs::msg::Cluster>());
 //    data_association.reset(new kkl::alg::GlobalNearestNeighborAssociation<KalmanTracker::Ptr, VisualDetection>());
   }
 
@@ -65,7 +65,7 @@ public:
    * @param time          current time
    * @param detections    detections
    */
-  void correct(const rclcpp::Time& time, const std::vector<hdl_people_tracking::msg::Cluster>& detections) {
+  void correct(const rclcpp::Time& time, const std::vector<hdl_people_tracking_msgs::msg::Cluster>& detections) {
     // data association
     std::vector<bool> associated(detections.size(), false);
     auto associations = data_association->associate(people, detections);
@@ -118,7 +118,7 @@ public:
 
   std::vector<KalmanTracker::Ptr> people;
   std::vector<KalmanTracker::Ptr> removed_people;
-  std::unique_ptr<kkl::alg::DataAssociation<KalmanTracker::Ptr, hdl_people_tracking::msg::Cluster>> data_association;
+  std::unique_ptr<kkl::alg::DataAssociation<KalmanTracker::Ptr, hdl_people_tracking_msgs::msg::Cluster>> data_association;
 };
 
 }

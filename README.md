@@ -1,32 +1,50 @@
-# hdl_people_tracking (ROS 2)
+# hdl_people_tracking
 
-This is a ROS 2 port of the `hdl_people_tracking` package.
+ROS 2 people detection and tracking from a 3D LiDAR point cloud.
+
+The detector crops the input cloud to the robot front sector before clustering:
+
+- default field of view: 90 degrees, 45 degrees each side
+- default range: 0.1 m to 5.0 m
+- default forward axis: `+x`
+- default lateral axis: `+y`
+
+The tracker consumes detected human clusters and publishes constant-velocity
+Kalman tracks.
 
 ## Build
 
 ```bash
-cd ~/nav_ws
-colcon build --packages-select hdl_people_tracking
-source install/setup.bash
+colcon build --packages-select hdl_people_tracking_msgs hdl_people_tracking
 ```
 
-## Usage
-
-Launch the people tracking nodes:
+## Run
 
 ```bash
 ros2 launch hdl_people_tracking hdl_people_tracking.launch.py
 ```
 
-Arguments:
-- `static_sensor` (default: `false`): Set to `true` if the sensor is fixed (not moving).
+The launch file remaps the detector input `points` topic to `/b2/rslidar_points`.
 
-### Input Topics
-- `/velodyne_points` (`sensor_msgs/msg/PointCloud2`): Input 3D point cloud.
-- `/odom` (`nav_msgs/msg/Odometry`): Robot odometry (required if `static_sensor` is `false`).
+## Input
 
-### Output Topics
-- `clusters` (`hdl_people_tracking/msg/ClusterArray`): Detected clusters.
-- `tracks` (`hdl_people_tracking/msg/TrackArray`): Tracked people.
-- `markers` (`visualization_msgs/msg/MarkerArray`): Visualization markers for tracks.
-- `detection_markers` (`visualization_msgs/msg/MarkerArray`): Visualization markers for detections.
+- `points` (`sensor_msgs/msg/PointCloud2`): input 3D LiDAR cloud
+
+## Outputs
+
+- `clusters` (`hdl_people_tracking_msgs/msg/ClusterArray`): detected clusters
+- `tracks` (`hdl_people_tracking_msgs/msg/TrackArray`): tracked people
+- `markers` (`visualization_msgs/msg/MarkerArray`): tracked-people markers
+- `detection_markers` (`visualization_msgs/msg/MarkerArray`): detection markers
+- `cropped_points` (`sensor_msgs/msg/PointCloud2`): cropped/downsampled candidate points
+- `cluster_points` (`sensor_msgs/msg/PointCloud2`): all clustered points
+- `human_points` (`sensor_msgs/msg/PointCloud2`): clustered points accepted as human
+
+## Key Parameters
+
+- `max_detection_range` default `5.0`
+- `front_fov_deg` default `90.0`
+- `downsample_resolution` default `0.1`
+- `enable_classification` default `false`
+- `cluster_min_pts` default `10`
+- `cluster_max_pts` default `2048`

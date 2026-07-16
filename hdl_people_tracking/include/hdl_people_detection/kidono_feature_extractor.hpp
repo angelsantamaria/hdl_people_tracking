@@ -1,6 +1,8 @@
 #ifndef KIDONO_FEATURE_EXTRACTOR_HPP
 #define KIDONO_FEATURE_EXTRACTOR_HPP
 
+#include <algorithm>
+#include <cmath>
 #include <vector>
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
@@ -71,6 +73,10 @@ public:
 private:
   template<typename T>
   T square(T v) const { return v * v; }
+
+  int clampIndex(int index, int upper_bound) const {
+    return std::max(0, std::min(index, upper_bound - 1));
+  }
 
   pcl::PointCloud<pcl::PointXYZI>::Ptr centeredCloud(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr& cloud, const Eigen::Vector3f& mean) const {
     pcl::PointCloud<pcl::PointXYZI>::Ptr centered_cloud(new pcl::PointCloud<pcl::PointXYZI>());
@@ -200,12 +206,16 @@ private:
     }
 
     Eigen::Array2f size = max_pt - min_pt;
-    Eigen::Array2f inv_size = Eigen::Array2f(bin1 - 0.1f, bin2 - 0.1f) / size;
+    Eigen::Array2f inv_size;
+    inv_size[0] = size[0] > 1e-6f ? (bin1 - 0.1f) / size[0] : 0.0f;
+    inv_size[1] = size[1] > 1e-6f ? (bin2 - 0.1f) / size[1] : 0.0f;
 
     float weight = 1.0f / pts2d.size();
     std::vector<float> hist(bin1 * bin2, 0.0f);
     for (size_t i = 0; i < pts2d.size(); i++) {
       Eigen::Array2i index = ((pts2d[i].array() - min_pt) * inv_size).cast<int>();
+      index[0] = clampIndex(index[0], bin1);
+      index[1] = clampIndex(index[1], bin2);
       hist[index[0] + index[1] * bin1] += weight;
     }
 
@@ -227,6 +237,9 @@ private:
     }
 
     float height = e1_max - e1_min;
+    if (height <= 1e-6f) {
+      return std::vector<float>(slice_n * 2, 0.0f);
+    }
     float scale = (slice_n - 0.1f) / height;
 
     std::vector<Eigen::Array2f> min_pts(slice_n);
@@ -238,6 +251,7 @@ private:
 
     for (size_t i = 0; i < aligned_cloud.size(); i++) {
       int n = static_cast<int>((aligned_cloud[i][0] - e1_min) * scale);
+      n = clampIndex(n, slice_n);
       min_pts[n] = min_pts[n].min(aligned_cloud[i].bottomLeftCorner(2, 1).array());
       max_pts[n] = max_pts[n].max(aligned_cloud[i].bottomLeftCorner(2, 1).array());
     }
@@ -261,6 +275,10 @@ private:
   }
 
   std::vector<float> intensityDistribution(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr& centered_cloud, int hist_n = 25) const {
+    if (centered_cloud->empty()) {
+      return std::vector<float>(hist_n + 2, 0.0f);
+    }
+
     Eigen::ArrayXf intensity(centered_cloud->size());
     for (size_t i = 0; i < centered_cloud->size(); i++) {
       intensity[i] = centered_cloud->at(i).intensity;
@@ -272,6 +290,7 @@ private:
     float scale = (hist_n - 0.1f) / 255.0f;
     for (int i = 0; i < intensity.size(); i++) {
       int n = static_cast<int>(intensity[i] * scale);
+      n = clampIndex(n, hist_n);
       feature[n] += weight;
     }
 

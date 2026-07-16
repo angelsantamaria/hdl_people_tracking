@@ -2,6 +2,7 @@
 #define KKL_SVM_SCALE_HPP
 
 #include <array>
+#include <algorithm>
 #include <string>
 #include <vector>
 #include <fstream>
@@ -61,7 +62,11 @@ public:
   cv::Mat scaling(const cv::Mat& feature) const {
     cv::Mat scaled(feature.size(), 1, CV_32FC1);
     for (int i = 0; i<feature.rows; i++) {
-      scaled.at<float>(i) = offsetScale[i][0] + feature.at<float>(i) * offsetScale[i][1];
+      if (i < static_cast<int>(offsetScale.size())) {
+        scaled.at<float>(i) = offsetScale[i][0] + feature.at<float>(i) * offsetScale[i][1];
+      } else {
+        scaled.at<float>(i) = feature.at<float>(i);
+      }
     }
 
     return scaled;
@@ -70,7 +75,11 @@ public:
   cv::Mat scaling(const std::vector<float>& feature) const {
     cv::Mat scaled(feature.size(), 1, CV_32FC1);
     for (size_t i = 0; i<feature.size(); i++) {
-      scaled.at<float>(i) = offsetScale[i][0] + feature[i] * offsetScale[i][1];
+      if (i < offsetScale.size()) {
+        scaled.at<float>(i) = offsetScale[i][0] + feature[i] * offsetScale[i][1];
+      } else {
+        scaled.at<float>(i) = feature[i];
+      }
     }
 
     return scaled;
