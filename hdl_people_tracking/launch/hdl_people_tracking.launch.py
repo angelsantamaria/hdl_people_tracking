@@ -15,11 +15,11 @@ def generate_launch_description():
                 name='hdl_people_detection_node',
                 parameters=[{
                     'downsample_resolution': 0.02,
-                    'min_detection_range': 0.1,
+                    'min_detection_range': 0.5,
                     'max_detection_range': 5.0,
-                    'min_detection_height': -0.3,
-                    'max_detection_height': 0.5,
-                    'front_fov_deg': 90.0,
+                    'min_detection_height': -0.25,
+                    'max_detection_height': 0.25,
+                    'front_fov_deg': 60.0,
                     'forward_axis': 'x',
                     'lateral_axis': 'y',
                     'height_axis': 'z',
@@ -28,9 +28,9 @@ def generate_launch_description():
                     'cluster_min_size_x': 0.2,
                     'cluster_min_size_y': 0.2,
                     'cluster_min_size_z': 0.3,
-                    'cluster_max_size_x': 1.0,
-                    'cluster_max_size_y': 1.0,
-                    'cluster_max_size_z': 2.0,
+                    'cluster_max_size_x': 0.5,
+                    'cluster_max_size_y': 0.5,
+                    'cluster_max_size_z': 1.0,
                     'euclidean_cluster_tolerance': 0.2,
                     'dpmeans_split_threshold': 0.45,
                     'enable_shape_filter': True,
@@ -39,9 +39,9 @@ def generate_launch_description():
                     'shape_min_depth': 0.02,
                     'shape_min_radius': 0.10,
                     'shape_max_radius': 0.45,
-                    'shape_max_fit_rmse': 0.08,
+                    'shape_max_fit_rmse': 0.05,
                     'shape_max_linearity_ratio': 80.0,
-                    'enable_classification': False
+                    'enable_classification': True
                 }],
                 remappings=[
                     ('points', '/rslidar_points')
