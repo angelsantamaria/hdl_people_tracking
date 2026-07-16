@@ -35,7 +35,8 @@ Published detector and tracker topics are relative and use the
 
 The launch enables `track_init_centerline_only`, so new tracks are born only
 from unmatched human clusters close to the 0-degree forward ray. Existing tracks
-continue to associate with detections throughout the detector FOV.
+continue to associate with detections throughout the detector FOV when the
+correction is recent and the angular jump from the predicted track is small.
 
 Useful detector parameters include `euclidean_cluster_tolerance` default `0.2`
 and `dpmeans_split_threshold` default `0.45`. The height slice is controlled by

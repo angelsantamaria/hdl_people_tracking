@@ -55,7 +55,9 @@ def generate_launch_description():
                     'remove_trace_thresh': 1.0,
                     'human_radius': 0.4,
                     'track_init_centerline_only': True,
-                    'track_init_centerline_angle_deg': 5.0
+                    'track_init_centerline_angle_deg': 5.0,
+                    'track_association_max_gap_sec': 0.5,
+                    'track_association_max_angle_delta_deg': 15.0
                 }]
             )
         ],

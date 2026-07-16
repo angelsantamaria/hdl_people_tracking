@@ -15,7 +15,7 @@ The tracker consumes detected human clusters and publishes constant-velocity
 Kalman tracks.
 By default, new tracks are initialized only when an unmatched human cluster is
 near the forward centerline; existing tracks can still update anywhere inside
-the detector FOV.
+the detector FOV if the association is continuous.
 
 After clustering, the detector can reject clusters whose top-down footprint does
 not look like a person-sized cylinder front arc. This is intended to suppress
@@ -71,3 +71,5 @@ The launch file remaps the detector input `points` topic to `/rslidar_points`.
 - `cluster_max_pts` default `2048`
 - `track_init_centerline_only` launch default `true`
 - `track_init_centerline_angle_deg` launch default `5.0`
+- `track_association_max_gap_sec` launch default `0.5`
+- `track_association_max_angle_delta_deg` launch default `15.0`

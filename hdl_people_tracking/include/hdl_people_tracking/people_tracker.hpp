@@ -49,9 +49,19 @@ public:
     remove_trace_thresh = node->declare_parameter<double>("remove_trace_thresh", 1.0);
     init_centerline_only = node->declare_parameter<bool>("track_init_centerline_only", false);
     init_centerline_angle_deg = node->declare_parameter<double>("track_init_centerline_angle_deg", 5.0);
+    association_max_gap_sec = node->declare_parameter<double>("track_association_max_gap_sec", 0.5);
+    association_max_angle_delta_deg = node->declare_parameter<double>("track_association_max_angle_delta_deg", 15.0);
     if(init_centerline_angle_deg < 0.0) {
       RCLCPP_WARN(node->get_logger(), "track_init_centerline_angle_deg must be non-negative; using 5.0 deg");
       init_centerline_angle_deg = 5.0;
+    }
+    if(association_max_gap_sec < 0.0) {
+      RCLCPP_WARN(node->get_logger(), "track_association_max_gap_sec must be non-negative; using 0.5 s");
+      association_max_gap_sec = 0.5;
+    }
+    if(association_max_angle_delta_deg < 0.0) {
+      RCLCPP_WARN(node->get_logger(), "track_association_max_angle_delta_deg must be non-negative; using 15.0 deg");
+      association_max_angle_delta_deg = 15.0;
     }
 
     data_association.reset(new kkl::alg::NearestNeighborAssociation<KalmanTracker::Ptr, hdl_people_tracking_msgs::msg::Cluster>());
@@ -78,9 +88,13 @@ public:
     std::vector<bool> associated(detections.size(), false);
     auto associations = data_association->associate(people, detections);
     for(const auto& assoc : associations) {
-      associated[assoc.observation] = true;
       const auto& observation = detections[assoc.observation].centroid;
       Eigen::Vector3d observation_pos(observation.x, observation.y, observation.z);
+      if(!passesAssociationContinuity(people[assoc.tracker], observation_pos, time)) {
+        continue;
+      }
+
+      associated[assoc.observation] = true;
       people[assoc.tracker]->correct(time, observation_pos, detections[assoc.observation]);
     }
 
@@ -134,12 +148,45 @@ private:
     return angle_deg <= init_centerline_angle_deg;
   }
 
+  bool passesAssociationContinuity(
+    const KalmanTracker::Ptr& tracker,
+    const Eigen::Vector3d& observation,
+    const rclcpp::Time& time) const
+  {
+    if(association_max_gap_sec > 0.0 &&
+      (time - tracker->lastCorrectionTime()).seconds() > association_max_gap_sec)
+    {
+      return false;
+    }
+
+    if(association_max_angle_delta_deg <= 0.0) {
+      return true;
+    }
+
+    const Eigen::Vector3d predicted = tracker->position();
+    if(predicted.head<2>().norm() < 1e-3 || observation.head<2>().norm() < 1e-3) {
+      return false;
+    }
+
+    constexpr double kPi = 3.14159265358979323846;
+    const double predicted_angle = std::atan2(predicted.y(), predicted.x());
+    const double observation_angle = std::atan2(observation.y(), observation.x());
+    double angle_delta = std::abs(observation_angle - predicted_angle);
+    if(angle_delta > kPi) {
+      angle_delta = 2.0 * kPi - angle_delta;
+    }
+
+    return angle_delta * 180.0 / kPi <= association_max_angle_delta_deg;
+  }
+
 public:
   long id_gen;                  // track ID which will be assigned to the next new track
   double human_radius;          // new tracks must be far from existing tracks than this value
   double remove_trace_thresh;   // tracks with larger covariance trace than this will be removed
   bool init_centerline_only;     // new tracks are initialized only near the forward ray
   double init_centerline_angle_deg;
+  double association_max_gap_sec;
+  double association_max_angle_delta_deg;
 
   std::vector<KalmanTracker::Ptr> people;
   std::vector<KalmanTracker::Ptr> removed_people;
